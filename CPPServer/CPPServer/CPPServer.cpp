@@ -60,9 +60,13 @@ OVObject constructOVO(short type, float x, float y, short r, short g, short b, s
 
 int main()
 {
-    std::cout << "CPP Server v0.3.5" << std::endl;
+    std::cout << "CPP Server v0.3.9" << std::endl;
 
     std::cout << sizeof(OVObject) << std::endl;
+
+    std::cout << "the size of short is: " << sizeof(short) << std::endl;
+    std::cout << "the size of float is: " << sizeof(float) << std::endl;
+    std::cout << "the size of char[128] is: " << sizeof(char[128]) << std::endl;
 
     OVObject serverArray[128];
     std::cout << "arraysize: " << sizeof(serverArray) << std::endl;
@@ -124,6 +128,7 @@ int main()
 
 
     CopyMemory((PVOID)pBuf, serverArray, sizeof(serverArray));
+    std::cout << "copied" << std::endl;
     _getch();
 
     std::cout << "overinnit" << std::endl;

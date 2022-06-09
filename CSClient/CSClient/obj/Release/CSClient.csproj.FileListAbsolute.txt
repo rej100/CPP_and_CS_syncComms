@@ -1,0 +1,8 @@
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\bin\Release\CSClient.exe.config
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\bin\Release\CSClient.exe
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\bin\Release\CSClient.pdb
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\obj\Release\CSClient.csproj.AssemblyReference.cache
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\obj\Release\CSClient.csproj.SuggestedBindingRedirects.cache
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\obj\Release\CSClient.csproj.CoreCompileInputs.cache
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\obj\Release\CSClient.exe
+C:\dev\CPP_and_CS_syncComms\CSClient\CSClient\obj\Release\CSClient.pdb
