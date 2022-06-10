@@ -59,8 +59,9 @@ OVObject constructOVO(short type, float x, float y, short r, short g, short b, s
 
 int main()
 {
-    std::cout << "CPP Server v0.8.9" << std::endl;
+    std::cout << "CPP Server v0.9.5" << std::endl;
 
+    //mapped file prep begin
     HANDLE hMapFile;
     DWORD64 pBuf;
 
@@ -80,17 +81,39 @@ int main()
         CloseHandle(hMapFile);
         return 1;
     }
+    //mapped file prep end
+
+    //mutex prep begin
+    HANDLE hMutex;
+
+    hMutex = CreateMutex(NULL, FALSE, TEXT("OVTMutexObject"));
+
+    if (hMutex == NULL)
+    {
+        printf("CreateMutex error: %d\n", GetLastError());
+    }
+    else if (GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        printf("CreateMutex opened an existing mutex\n");
+    }
+    else
+    {
+        printf("CreateMutex created a new mutex.\n");
+    }
+    //mutex prep end
+
     srand(static_cast <unsigned> (time(0)));
 
     int countTest = 5;
 
     OVObject* cinArray;
-    cinArray = new OVObject[countTest];
 
     std::cin.get();
     while (true)
     {
-        //countTest = (rand() % 5) +1
+        countTest = (rand() % 10) + 1;
+        cinArray = new OVObject[countTest];
+
         for (int i = 0; i < countTest; i++)
         {
             std::string ftestObjStrCin;
@@ -105,8 +128,10 @@ int main()
             cinArray[i] = constructOVO(OV_LINE, randX, 1.2f, randR, 2, 3, 4, 2.1f, 2.2f, 100.1f, 100.2f, ftestObjTxtCin);
         }
 
+        WaitForSingleObject(hMutex, INFINITE);
         CopyMemory((PVOID)(pBuf), &countTest, 4);
         CopyMemory((PVOID)(pBuf + 4), cinArray, sizeof(OVObject) * countTest);
+        ReleaseMutex(hMutex);
 
         system("cls");
         std::cout << "count: " << countTest << std::endl;
@@ -114,7 +139,7 @@ int main()
         {
             std::cout << cinArray[i].text << " | x: " << cinArray[i].x << " | r: " << cinArray[i].r << std::endl;
         }
-        //Sleep(500);
+        Sleep(1);
     }
 
     std::cout << "copied" << std::endl;
@@ -128,91 +153,9 @@ int main()
     }
 
     CloseHandle(hMapFile);
-    delete[] cinArray;
+    CloseHandle(hMutex);
+    
 
     std::cin.get();
 
 }
-
-//int main()
-//{
-//    std::cout << "CPP Server v0.8.3" << std::endl;
-//
-//    std::cout << sizeof(OVObject) << std::endl;
-//
-//    std::cout << "the size of int is: " << sizeof(int) << std::endl;
-//    std::cout << "the size of short is: " << sizeof(short) << std::endl;
-//    std::cout << "the size of float is: " << sizeof(float) << std::endl;
-//    std::cout << "the size of char[128] is: " << sizeof(char[128]) << std::endl;
-//    std::cout << "the size of LPCTSTR is: " << sizeof(LPCTSTR) << std::endl;
-//
-//    int countTest = 0;
-//    std::cin >> countTest;
-//
-//    OVObject* cinArray;
-//    cinArray = new OVObject[countTest];
-//    std::cout << "count is: " << countTest << " sizeof array is: " << sizeof(cinArray) << std::endl;
-//
-//    std::cin.get();
-//    std::cin.get();
-//
-//    for (int i = 0; i < countTest; i++)
-//    {
-//        std::string ftestObjStrCin;
-//        char ftestObjTxtCin[128];
-//
-//        ftestObjStrCin = "Cin Test object number " + std::to_string(i);
-//        strcpy_s(ftestObjTxtCin, ftestObjStrCin.c_str());
-//
-//        cinArray[i] = constructOVO(OV_LINE, 1.1f, 1.2f, (1 + i), 2, 3, 4, 2.1f, 2.2f, 100.1f, 100.2f, ftestObjTxtCin);
-//    }
-//
-//    std::cout << "cin last r: " << cinArray[countTest - 1].r << " | " << "cin last text: " << cinArray[countTest - 1].text << std::endl;
-//    std::cout << "cin first r: " << cinArray[0].r << " | " << "cin first: " << cinArray[0].text << std::endl;
-//
-//    HANDLE hMapFile;
-//    DWORD64 pBuf;
-//
-//    hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, BUF_SIZE, szName);
-//
-//    if (hMapFile == NULL)
-//    {
-//        _tprintf(TEXT("Could not create file mapping object (%d).\n"),
-//            GetLastError());
-//        return 1;
-//    }
-//    pBuf = (DWORD64)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, BUF_SIZE);
-//
-//    if (pBuf == NULL)
-//    {
-//        _tprintf(TEXT("Could not map view of file (%d).\n"),
-//            GetLastError());
-//
-//        CloseHandle(hMapFile);
-//
-//        return 1;
-//    }
-//
-//    std::cout << "the size of pbuff is: " << (PVOID)pBuf << std::endl;
-//    std::cout << "the size of pbuff is: " << (PVOID)(pBuf + 2) << std::endl;
-//
-//
-//    CopyMemory((PVOID)(pBuf), &countTest, 4);
-//    CopyMemory((PVOID)(pBuf + 4), cinArray, sizeof(OVObject) * countTest);
-//
-//    std::cout << "copied" << std::endl;
-//    _getch();
-//
-//    std::cout << "overinnit" << std::endl;
-//
-//    if (UnmapViewOfFile((LPCVOID)pBuf) == 0)
-//    {
-//        std::cout << "unmap failed" << std::endl;
-//    }
-//
-//    CloseHandle(hMapFile);
-//    delete[] cinArray;
-//
-//    std::cin.get();
-//
-//}
