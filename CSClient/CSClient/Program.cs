@@ -13,9 +13,8 @@ using System.Runtime.InteropServices;
 //#define OV_RECT 2
 //#define OV_RECT_FILL 3
 //#define OV_TEXT 4
-
-////164*128
-//#define BUF_SIZE 20992
+////164*2000 = 328 000
+//#define BUF_SIZE 328000
 
 namespace CSClient
 {
@@ -43,36 +42,92 @@ namespace CSClient
     internal class Program
     {
         const int OV_EMPTY = 0;
-        const int OV_LINE = 0;
-        const int OV_RECT = 0;
-        const int OV_RECT_FILL = 0;
-        const int OV_TEXT = 0;
+        const int OV_LINE = 1;
+        const int OV_RECT = 2;
+        const int OV_RECT_FILL = 3;
+        const int OV_TEXT = 4;
 
-        const int BUF_SIZE = 20992;
+        const int BUF_SIZE = 328000;
+
+        unsafe static byte[] bytePtrToArr(byte* toConvert, int length)
+        {
+            byte[] result = new byte[length];
+            bool fixFlag = false;
+
+            for (int i = 0; i < length; i++)
+            {
+                if(!fixFlag)
+                {
+                    if (toConvert[i] == 0)
+                    {
+                        fixFlag = true;
+                    }
+                    result[i] = toConvert[i];
+                }
+                else
+                {
+                    result[i] = 0;
+                }
+            }
+
+            return result;
+        }
         unsafe static void Main(string[] args)
         {
-            Console.WriteLine("CSC v0.2.8");
+            Console.WriteLine("CSC v0.7.1");
             Console.WriteLine("the size of short is: {0}", sizeof(short));
             Console.WriteLine("the size of float is: {0}", sizeof(float));
             Console.WriteLine("the size of byte is: {0}", sizeof(byte));
             Console.WriteLine("the size of OVObject is: {0}", sizeof(OVObject));
 
-            OVObject[] serverArray = new OVObject[128];
 
             Console.ReadLine();
 
-            //using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.CreateOrOpen("XboxGameBarPoc_SharedMemory", 0x644, MemoryMappedFileAccess.ReadWriteExecute))
-            //OVTMappingObject
             using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.CreateOrOpen("Global\\OVTMappingObject", BUF_SIZE, MemoryMappedFileAccess.ReadWriteExecute))
             {
                 using (MemoryMappedViewAccessor viewAccessor = memoryMappedFile.CreateViewAccessor())
                 {
-                    viewAccessor.ReadArray<OVObject>(0, serverArray, 0, 128);
-                    Console.WriteLine("r is: {0}", serverArray[127].r);
-                    //int count = 0;
-                    //viewAccessor.Read<int>(0, out count);
-                    //Box[] boxArray = new Box[count];
-                    //viewAccessor.ReadArray<Box>(4, boxArray, 0, count);
+                    int count = 0;
+                    viewAccessor.Read<int>(0, out count);
+
+                    OVObject[] serverArray = new OVObject[count];
+                    viewAccessor.ReadArray<OVObject>(4, serverArray, 0, count);
+
+                    Console.WriteLine("count is: {0} | r of 0th object is: {1} | r of last object is {2}", count, serverArray[0].r, serverArray[count - 1].r);
+
+                    fixed(OVObject* temp = &serverArray[0])
+                    {
+                        //byte[] tempByteArr = new byte[128];
+                        //Marshal.Copy((IntPtr)temp->text, tempByteArr, 0, 128);
+                        //Console.WriteLine();
+                        //for (int i = 0; i < 128; i++)
+                        //{
+                        //    Console.Write(" ");
+                        //    Console.Write("{0}", tempByteArr[i]);
+                        //}
+                        //Console.WriteLine();
+                        //string result = System.Text.Encoding.ASCII.GetString(tempByteArr);
+                        //Console.WriteLine("first object says: {0}", result);
+
+                        byte[] tempByteArr = new byte[128];
+                        tempByteArr = bytePtrToArr(temp->text, 128);
+                        Console.WriteLine();
+                        for (int i = 0; i < 128; i++)
+                        {
+                            Console.Write(" ");
+                            Console.Write("{0}", tempByteArr[i]);
+                        }
+                        Console.WriteLine();
+                        string result = System.Text.Encoding.ASCII.GetString(tempByteArr);
+                        Console.WriteLine("first object says: {0}", result);
+                    }
+                    fixed (OVObject* temp = &serverArray[count-1])
+                    {
+                        byte[] tempByteArr = new byte[128];
+                        tempByteArr = bytePtrToArr(temp->text, 128);
+                        string result = System.Text.Encoding.ASCII.GetString(tempByteArr);
+                        Console.WriteLine("last object says: {0}", result);
+                    }
                 }
             }
 

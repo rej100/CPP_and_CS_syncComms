@@ -11,12 +11,10 @@
 #define OV_RECT 2
 #define OV_RECT_FILL 3
 #define OV_TEXT 4
-
-//164*128
-#define BUF_SIZE 20992
+//164*2000 = 328 000
+#define BUF_SIZE 328000
 
 TCHAR szName[] = TEXT("Global\\OVTMappingObject");
-TCHAR szMsg[] = TEXT("Message from first process.");
 
 //164 bytes of data
 struct OVObject
@@ -60,49 +58,44 @@ OVObject constructOVO(short type, float x, float y, short r, short g, short b, s
 
 int main()
 {
-    std::cout << "CPP Server v0.3.9" << std::endl;
+    std::cout << "CPP Server v0.8.3" << std::endl;
 
     std::cout << sizeof(OVObject) << std::endl;
 
+    std::cout << "the size of int is: " << sizeof(int) << std::endl;
     std::cout << "the size of short is: " << sizeof(short) << std::endl;
     std::cout << "the size of float is: " << sizeof(float) << std::endl;
     std::cout << "the size of char[128] is: " << sizeof(char[128]) << std::endl;
+    std::cout << "the size of LPCTSTR is: " << sizeof(LPCTSTR) << std::endl;
 
-    OVObject serverArray[128];
-    std::cout << "arraysize: " << sizeof(serverArray) << std::endl;
-    
-    char testObjTxt[128] = "xdTesting";
+    int countTest = 0;
+    std::cin >> countTest;
 
-    OVObject testObj = constructOVO(OV_LINE, 1.1f, 1.2f, 1, 2, 3, 4, 2.1f, 2.2f, 100.1f, 100.2f, testObjTxt);
+    OVObject* cinArray;
+    cinArray = new OVObject[countTest];
+    std::cout << "count is: " << countTest << " sizeof array is: " << sizeof(cinArray) << std::endl;
 
-    std::cout << testObj.type << " " << testObj.width << " " << testObj.text << std::endl;
+    std::cin.get();
+    std::cin.get();
 
-    
-
-
-    for (int i = 0; i < 128; i++)
+    for (int i = 0; i < countTest; i++)
     {
-        std::string ftestObjStr;
-        char ftestObjTxt[128];
+        std::string ftestObjStrCin;
+        char ftestObjTxtCin[128];
 
-        ftestObjStr = "Test object number " + std::to_string(i);
-        strcpy_s(ftestObjTxt, ftestObjStr.c_str());
+        ftestObjStrCin = "Cin Test object number " + std::to_string(i);
+        strcpy_s(ftestObjTxtCin, ftestObjStrCin.c_str());
 
-        serverArray[i] = constructOVO(OV_LINE, 1.1f, 1.2f, (1 + i), 2, 3, 4, 2.1f, 2.2f, 100.1f, 100.2f, ftestObjTxt);
+        cinArray[i] = constructOVO(OV_LINE, 1.1f, 1.2f, (1 + i), 2, 3, 4, 2.1f, 2.2f, 100.1f, 100.2f, ftestObjTxtCin);
     }
 
-    std::cout << serverArray[127].r << " " << serverArray[127].text << std::endl;
+    std::cout << "cin last r: " << cinArray[countTest - 1].r << " | " << "cin last text: " << cinArray[countTest-1].text << std::endl;
+    std::cout << "cin first r: " << cinArray[0].r << " | " << "cin first: " << cinArray[0].text << std::endl;
 
     HANDLE hMapFile;
-    LPCTSTR pBuf;
+    DWORD64 pBuf;
 
-    hMapFile = CreateFileMapping(
-        INVALID_HANDLE_VALUE,    // use paging file
-        NULL,                    // default security
-        PAGE_READWRITE,          // read/write access
-        0,                       // maximum object size (high-order DWORD)
-        BUF_SIZE,                // maximum object size (low-order DWORD)
-        szName);                 // name of mapping object
+    hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, BUF_SIZE, szName);                 
 
     if (hMapFile == NULL)
     {
@@ -110,11 +103,7 @@ int main()
             GetLastError());
         return 1;
     }
-    pBuf = (LPTSTR)MapViewOfFile(hMapFile,   // handle to map object
-        FILE_MAP_ALL_ACCESS, // read/write permission
-        0,
-        0,
-        BUF_SIZE);
+    pBuf = (DWORD64)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, BUF_SIZE);
 
     if (pBuf == NULL)
     {
@@ -126,16 +115,25 @@ int main()
         return 1;
     }
 
+    std::cout << "the size of pbuff is: " << (PVOID)pBuf << std::endl;
+    std::cout << "the size of pbuff is: " << (PVOID)(pBuf+2) << std::endl;
 
-    CopyMemory((PVOID)pBuf, serverArray, sizeof(serverArray));
+
+    CopyMemory((PVOID)(pBuf), &countTest, 4);
+    CopyMemory((PVOID)(pBuf+4), cinArray, sizeof(OVObject)*countTest);
+
     std::cout << "copied" << std::endl;
     _getch();
 
     std::cout << "overinnit" << std::endl;
 
-    UnmapViewOfFile(pBuf);
+    if ( UnmapViewOfFile((LPCVOID)pBuf) == 0 )
+    {
+        std::cout << "unmap failed" << std::endl;
+    }
 
     CloseHandle(hMapFile);
+    delete[] cinArray;
 
     std::cin.get();
 
